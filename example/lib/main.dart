@@ -43,6 +43,10 @@ class _HomeScreenState extends State<HomeScreen> {
             imagePath: 'assets/vert_thumb.png',
             thumbHeight: 30,
             thumbWidth: 30,
+            trackHeight: 10,
+            activeTrackGradient:
+                const LinearGradient(colors: [Colors.blue, Colors.pink]),
+            inactiveTrackColor: Colors.black,
             slider: Slider(
                 value: sliderValue,
                 min: 0,
