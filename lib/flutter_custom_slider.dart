@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_custom_slider/src/image_thumb_shape.dart';
 
 class FlutterCustomSlider extends StatefulWidget {
-  final String imagePath;
+  final String thumbAsset;
   final Widget slider;
   final int thumbWidth;
   final int thumbHeight;
@@ -14,17 +14,21 @@ class FlutterCustomSlider extends StatefulWidget {
   final Gradient? activeTrackGradient;
   final Gradient? inactiveTrackGradient;
   final Color? inactiveTrackColor;
+  final double? trackBorder;
+  final Color? trackBorderColor;
 
   const FlutterCustomSlider(
       {super.key,
+      required this.thumbAsset,
       required this.slider,
-      required this.imagePath,
       this.activeTrackGradient,
       this.thumbWidth = 50,
       this.thumbHeight = 50,
       this.trackHeight,
       this.inactiveTrackColor,
-      this.inactiveTrackGradient});
+      this.inactiveTrackGradient,
+      this.trackBorder,
+      this.trackBorderColor});
 
   @override
   State<FlutterCustomSlider> createState() => _FlutterCustomSliderState();
@@ -40,7 +44,7 @@ class _FlutterCustomSliderState extends State<FlutterCustomSlider> {
   }
 
   _loadImage() async {
-    ByteData byData = await rootBundle.load(widget.imagePath);
+    ByteData byData = await rootBundle.load(widget.thumbAsset);
     final Uint8List bytes = Uint8List.view(byData.buffer);
     final ui.Codec codec = await ui.instantiateImageCodec(bytes,
         targetWidth: widget.thumbWidth, targetHeight: widget.thumbHeight);
@@ -53,13 +57,17 @@ class _FlutterCustomSliderState extends State<FlutterCustomSlider> {
   Widget build(BuildContext context) {
     return SliderTheme(
       data: SliderThemeData(
-          thumbShape: myShape,
-          trackHeight: widget.trackHeight,
-          inactiveTrackColor: widget.inactiveTrackColor,
-          trackShape: GradientSliderTrackShape(
-              activeTrackGradient:
-                  widget.activeTrackGradient ?? _defaultAciveGradient,
-              inactiveTrackGradient: widget.inactiveTrackGradient)),
+        thumbShape: myShape,
+        trackHeight: widget.trackHeight,
+        inactiveTrackColor: widget.inactiveTrackColor,
+        trackShape: GradientSliderTrackShape(
+          activeTrackGradient:
+              widget.activeTrackGradient ?? _defaultAciveGradient,
+          inactiveTrackGradient: widget.inactiveTrackGradient,
+          trackBorder: widget.trackBorder,
+          trackBorderColor: widget.trackBorderColor,
+        ),
+      ),
       child: widget.slider,
     );
   }
@@ -73,9 +81,13 @@ class GradientSliderTrackShape extends SliderTrackShape
   GradientSliderTrackShape({
     required this.activeTrackGradient,
     this.inactiveTrackGradient,
+    this.trackBorder,
+    this.trackBorderColor,
   });
   final Gradient activeTrackGradient;
   final Gradient? inactiveTrackGradient;
+  final double? trackBorder;
+  final Color? trackBorderColor;
   @override
   void paint(
     PaintingContext context,
@@ -105,8 +117,7 @@ class GradientSliderTrackShape extends SliderTrackShape
       isDiscrete: isDiscrete,
     );
     final ColorTween activeTrackColorTween = ColorTween(
-        begin: sliderTheme.disabledActiveTrackColor,
-        end: sliderTheme.activeTrackColor);
+        begin: sliderTheme.disabledActiveTrackColor, end: Colors.white);
     final ColorTween inactiveTrackColorTween = ColorTween(
         begin: sliderTheme.disabledInactiveTrackColor,
         end: inactiveTrackGradient != null
@@ -120,6 +131,7 @@ class GradientSliderTrackShape extends SliderTrackShape
     if (inactiveTrackGradient != null) {
       inactivePaint.shader = inactiveTrackGradient!.createShader(trackRect);
     }
+    final canvas = context.canvas;
     final Paint leftTrackPaint;
     final Paint rightTrackPaint;
     switch (textDirection) {
@@ -137,7 +149,7 @@ class GradientSliderTrackShape extends SliderTrackShape
     final Radius activeTrackRadius =
         Radius.circular((trackRect.height + additionalActiveTrackHeight) / 2);
 
-    context.canvas.drawRRect(
+    canvas.drawRRect(
       RRect.fromLTRBAndCorners(
         trackRect.left,
         (textDirection == TextDirection.ltr)
@@ -156,7 +168,7 @@ class GradientSliderTrackShape extends SliderTrackShape
       ),
       leftTrackPaint,
     );
-    context.canvas.drawRRect(
+    canvas.drawRRect(
       RRect.fromLTRBAndCorners(
         thumbCenter.dx,
         (textDirection == TextDirection.rtl)
@@ -175,5 +187,24 @@ class GradientSliderTrackShape extends SliderTrackShape
       ),
       rightTrackPaint,
     );
+    if (trackBorder != null || trackBorderColor != null) {
+      final strokePaint = Paint()
+        ..color = trackBorderColor ?? Colors.black
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = trackBorder != null
+            ? trackBorder! < trackRect.height / 2
+                ? trackBorder!
+                : trackRect.height / 2
+            : 1
+        ..strokeCap = StrokeCap.round;
+      canvas.drawRRect(
+          RRect.fromLTRBAndCorners(
+              trackRect.left, trackRect.top, trackRect.right, trackRect.bottom,
+              topLeft: trackRadius,
+              bottomLeft: trackRadius,
+              bottomRight: trackRadius,
+              topRight: trackRadius),
+          strokePaint);
+    }
   }
 }

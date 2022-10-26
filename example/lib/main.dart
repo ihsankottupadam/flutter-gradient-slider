@@ -40,14 +40,15 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         children: [
           FlutterCustomSlider(
-            imagePath: 'assets/vert_thumb.png',
+            thumbAsset: 'assets/vert_thumb.png',
             thumbHeight: 30,
             thumbWidth: 30,
             trackHeight: 10,
+            trackBorder: 1,
             activeTrackGradient:
                 const LinearGradient(colors: [Colors.blue, Colors.pink]),
             inactiveTrackGradient:
-                const LinearGradient(colors: [Colors.grey, Colors.black]),
+                LinearGradient(colors: [Colors.grey, Colors.grey.shade800]),
             inactiveTrackColor: Colors.black,
             slider: Slider(
                 value: sliderValue,
