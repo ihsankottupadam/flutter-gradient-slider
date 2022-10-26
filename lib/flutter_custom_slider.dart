@@ -12,6 +12,7 @@ class FlutterCustomSlider extends StatefulWidget {
   final int thumbHeight;
   final double? trackHeight;
   final Gradient? activeTrackGradient;
+  final Gradient? inactiveTrackGradient;
   final Color? inactiveTrackColor;
 
   const FlutterCustomSlider(
@@ -22,7 +23,8 @@ class FlutterCustomSlider extends StatefulWidget {
       this.thumbWidth = 50,
       this.thumbHeight = 50,
       this.trackHeight,
-      this.inactiveTrackColor});
+      this.inactiveTrackColor,
+      this.inactiveTrackGradient});
 
   @override
   State<FlutterCustomSlider> createState() => _FlutterCustomSliderState();
@@ -56,7 +58,8 @@ class _FlutterCustomSliderState extends State<FlutterCustomSlider> {
           inactiveTrackColor: widget.inactiveTrackColor,
           trackShape: GradientSliderTrackShape(
               activeTrackGradient:
-                  widget.activeTrackGradient ?? _defaultAciveGradient)),
+                  widget.activeTrackGradient ?? _defaultAciveGradient,
+              inactiveTrackGradient: widget.inactiveTrackGradient)),
       child: widget.slider,
     );
   }
@@ -67,8 +70,12 @@ class _FlutterCustomSliderState extends State<FlutterCustomSlider> {
 
 class GradientSliderTrackShape extends SliderTrackShape
     with BaseSliderTrackShape {
-  GradientSliderTrackShape({required this.activeTrackGradient});
+  GradientSliderTrackShape({
+    required this.activeTrackGradient,
+    this.inactiveTrackGradient,
+  });
   final Gradient activeTrackGradient;
+  final Gradient? inactiveTrackGradient;
   @override
   void paint(
     PaintingContext context,
@@ -102,12 +109,17 @@ class GradientSliderTrackShape extends SliderTrackShape
         end: sliderTheme.activeTrackColor);
     final ColorTween inactiveTrackColorTween = ColorTween(
         begin: sliderTheme.disabledInactiveTrackColor,
-        end: sliderTheme.inactiveTrackColor);
+        end: inactiveTrackGradient != null
+            ? Colors.white
+            : sliderTheme.inactiveTrackColor);
     final Paint activePaint = Paint()
       ..shader = activeTrackGradient.createShader(trackRect)
       ..color = activeTrackColorTween.evaluate(enableAnimation)!;
     final Paint inactivePaint = Paint()
       ..color = inactiveTrackColorTween.evaluate(enableAnimation)!;
+    if (inactiveTrackGradient != null) {
+      inactivePaint.shader = inactiveTrackGradient!.createShader(trackRect);
+    }
     final Paint leftTrackPaint;
     final Paint rightTrackPaint;
     switch (textDirection) {

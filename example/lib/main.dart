@@ -46,6 +46,8 @@ class _HomeScreenState extends State<HomeScreen> {
             trackHeight: 10,
             activeTrackGradient:
                 const LinearGradient(colors: [Colors.blue, Colors.pink]),
+            inactiveTrackGradient:
+                const LinearGradient(colors: [Colors.grey, Colors.black]),
             inactiveTrackColor: Colors.black,
             slider: Slider(
                 value: sliderValue,
