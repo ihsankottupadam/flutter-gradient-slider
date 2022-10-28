@@ -1,39 +1,44 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages).
+ A slider wiget, supports image thumb, track gradient and border
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages).
--->
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+![](https://user-images.githubusercontent.com/58967706/198696817-c2f09f94-e5dd-43fe-9dfe-937697b09d7c.jpeg)
 
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
-
-## Getting started
-
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+* Custom thumb image
+* Active trck gradient
+* Inctive trck gradient
+* Track border
+* Track border color
 
 ## Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
+
 
 ```dart
-const like = 'sample';
+ GradientSlider(
+  thumbAsset: 'assets/vert_thumb.png',
+  thumbHeight: 30,
+  thumbWidth: 30,
+  trackBorder: 1,
+  trackBorderColor: Colors.black,
+  activeTrackGradient: const LinearGradient(colors: [Colors.pink, Colors.blue]),
+  inactiveTrackGradient:
+      LinearGradient(colors: [Colors.grey.shade300, Colors.grey.shade800]),
+  slider: Slider(value: 0.5, onChanged: (value) {}
+  ),
+)
 ```
 
-## Additional information
-
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+| Type | Properties | 
+| --- |:---:| 
+| String | thumbAsset
+| double | thumbHeight
+| double | thumbWidth
+| Widget | slider
+| Gradient | activeTrackGradient
+| Gradient | inactiveTrackGradient
+| Color | inactiveTrackColor
+| double | trackHeight
+| double | trackBorder
+| Color | trackBorderColor
