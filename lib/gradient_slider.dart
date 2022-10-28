@@ -1,11 +1,11 @@
-library flutter_custom_slider;
+library gradient_slider;
 
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_custom_slider/src/image_thumb_shape.dart';
+import 'package:gradient_slider/src/image_thumb_shape.dart';
 
-class FlutterCustomSlider extends StatefulWidget {
+class GradientSlider extends StatefulWidget {
   final String thumbAsset;
   final Widget slider;
   final int thumbWidth;
@@ -17,7 +17,7 @@ class FlutterCustomSlider extends StatefulWidget {
   final double? trackBorder;
   final Color? trackBorderColor;
 
-  const FlutterCustomSlider(
+  const GradientSlider(
       {super.key,
       required this.thumbAsset,
       required this.slider,
@@ -31,10 +31,10 @@ class FlutterCustomSlider extends StatefulWidget {
       this.trackBorderColor});
 
   @override
-  State<FlutterCustomSlider> createState() => _FlutterCustomSliderState();
+  State<GradientSlider> createState() => _GradientSliderState();
 }
 
-class _FlutterCustomSliderState extends State<FlutterCustomSlider> {
+class _GradientSliderState extends State<GradientSlider> {
   ImageThumbShape? myShape;
 
   @override

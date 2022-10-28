@@ -55,13 +55,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_custom_slider:
-    dependency: "direct main"
-    description:
-      path: ".."
-      relative: true
-    source: path
-    version: "0.0.1"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -74,6 +67,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  gradient_slider:
+    dependency: "direct main"
+    description:
+      path: ".."
+      relative: true
+    source: path
+    version: "1.0.0"
   lints:
     dependency: transitive
     description:

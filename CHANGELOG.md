@@ -1,3 +1,7 @@
-## 0.0.1
+## 1.0.0
 
-* TODO: Describe initial release.
+* Custom thumb image
+* Active trck radient
+* Inctive trck radient
+* Track border
+* Track border color

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_custom_slider/flutter_custom_slider.dart';
+import 'package:gradient_slider/gradient_slider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Custom Slider',
+      title: 'Gradient Slider',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          FlutterCustomSlider(
+          GradientSlider(
             thumbAsset: 'assets/vert_thumb.png',
             thumbHeight: 30,
             thumbWidth: 30,
