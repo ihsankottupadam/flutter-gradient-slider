@@ -1,7 +1,7 @@
 name: gradient_slider
 description: A slider wiget, supports image thumb, track gradient and border
 version: 1.0.0
-homepage: https://github.com/ihsankottupadam/flutter-custom-slider
+homepage: https://github.com/ihsankottupadam/flutter-gradient-slider
 environment:
   sdk: '>=2.18.2 <3.0.0'
   flutter: ">=1.17.0"
