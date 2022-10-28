@@ -35,47 +35,37 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Custom Slider'),
+        title: const Text('Gradient Slider'),
       ),
-      body: Column(
-        children: [
-          GradientSlider(
-            thumbAsset: 'assets/vert_thumb.png',
-            thumbHeight: 30,
-            thumbWidth: 30,
-            trackHeight: 10,
-            trackBorder: 1,
-            activeTrackGradient:
-                const LinearGradient(colors: [Colors.blue, Colors.pink]),
-            inactiveTrackGradient:
-                LinearGradient(colors: [Colors.grey, Colors.grey.shade800]),
-            inactiveTrackColor: Colors.black,
-            slider: Slider(
-                value: sliderValue,
-                min: 0,
-                max: 10,
-                onChanged: (val) {
-                  setState(() {
-                    sliderValue = val;
-                  });
-                }),
-          ),
-          TextField(
-            controller: textcontroller,
-            keyboardType: TextInputType.number,
-            maxLength: 2,
-          ),
-          ElevatedButton(
-              onPressed: () {
-                double val = double.parse(textcontroller.text);
-                if (val >= 0 && val <= 10) {
-                  setState(() {
-                    sliderValue = val;
-                  });
-                }
-              },
-              child: const Text('change value'))
-        ],
+      body: Center(
+        child: GradientSlider(
+          thumbAsset: 'assets/vert_thumb.png',
+          thumbHeight: 30,
+          thumbWidth: 30,
+          trackHeight: 10,
+          trackBorder: 1,
+          trackBorderColor: Colors.black,
+          activeTrackGradient: const LinearGradient(colors: [
+            Colors.pink,
+            Colors.blue,
+            Colors.pink,
+          ]),
+          inactiveTrackGradient: LinearGradient(colors: [
+            Colors.grey.shade800,
+            Colors.grey.shade300,
+            Colors.grey.shade800
+          ]),
+          inactiveTrackColor: Colors.black,
+          slider: Slider(
+              value: sliderValue,
+              min: 0,
+              max: 10,
+              onChanged: (val) {
+                setState(() {
+                  sliderValue = val;
+                });
+              }),
+        ),
       ),
     );
   }
