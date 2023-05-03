@@ -97,6 +97,7 @@ class GradientSliderTrackShape extends SliderTrackShape
     required Animation<double> enableAnimation,
     required ui.TextDirection textDirection,
     required ui.Offset thumbCenter,
+    ui.Offset? secondaryOffset,
     bool isEnabled = false,
     bool isDiscrete = false,
     double additionalActiveTrackHeight = 2,
