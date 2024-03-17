@@ -5,3 +5,12 @@
 * Inactive track Gradient
 * Track border
 * Track border color
+
+## 1.0.1
+
+* analytics issue fix
+
+## 1.0.2
+
+* minor fix
+* changes README.md
