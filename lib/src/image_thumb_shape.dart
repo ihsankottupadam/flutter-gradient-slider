@@ -2,13 +2,19 @@ import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 
 class ImageThumbShape extends SliderComponentShape {
-  ui.Image image;
+  final ui.Image image;
+  final double width;
+  final double height;
 
-  ImageThumbShape({required this.image});
+  ImageThumbShape({
+    required this.image,
+    required this.width,
+    required this.height,
+  });
 
   @override
   Size getPreferredSize(bool isEnabled, bool isDiscrete) {
-    return const Size(0, 0);
+    return Size(width, height);
   }
 
   @override
@@ -21,14 +27,29 @@ class ImageThumbShape extends SliderComponentShape {
       required SliderThemeData sliderTheme,
       required TextDirection textDirection,
       required double value,
-      required double textScaleFactor,
-      required Size sizeWithOverflow}) {
+      required Size sizeWithOverflow,
+      required double textScaleFactor}) {
     final canvas = context.canvas;
-    final imageWidth = image.width;
-    final imageHeight = image.height;
-    Offset imageOffset =
-        Offset(center.dx - (imageWidth / 2), center.dy - (imageHeight / 2));
-    Paint paint = Paint()..filterQuality = FilterQuality.high;
-    canvas.drawImage(image, imageOffset, paint);
+
+    final imageOffset =
+        Offset(center.dx - (width / 2), center.dy - (height / 2));
+
+    final destRect = Rect.fromLTWH(
+      imageOffset.dx,
+      imageOffset.dy,
+      width,
+      height,
+    );
+
+    final paint = Paint()
+      ..filterQuality = FilterQuality.high
+      ..isAntiAlias = true;
+
+    canvas.drawImageRect(
+      image,
+      Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+      destRect,
+      paint,
+    );
   }
 }

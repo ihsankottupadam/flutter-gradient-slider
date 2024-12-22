@@ -29,7 +29,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final textcontroller = TextEditingController();
   double sliderValue = 5;
   @override
   Widget build(BuildContext context) {

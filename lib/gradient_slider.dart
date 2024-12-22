@@ -8,8 +8,8 @@ import 'package:gradient_slider/src/image_thumb_shape.dart';
 class GradientSlider extends StatefulWidget {
   final String thumbAsset;
   final Widget slider;
-  final int thumbWidth;
-  final int thumbHeight;
+  final double thumbWidth;
+  final double thumbHeight;
   final double? trackHeight;
   final Gradient? activeTrackGradient;
   final Gradient? inactiveTrackGradient;
@@ -36,6 +36,7 @@ class GradientSlider extends StatefulWidget {
 
 class _GradientSliderState extends State<GradientSlider> {
   ImageThumbShape? myShape;
+  ui.Image? thumbImage;
 
   @override
   void initState() {
@@ -43,14 +44,39 @@ class _GradientSliderState extends State<GradientSlider> {
     _loadImage();
   }
 
+  @override
+  void didUpdateWidget(GradientSlider oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.thumbAsset != widget.thumbAsset) {
+      _loadImage();
+      return;
+    }
+
+    if (oldWidget.thumbWidth != widget.thumbWidth ||
+        oldWidget.thumbHeight != widget.thumbHeight) {
+      _updateThumbShape();
+    }
+  }
+
   _loadImage() async {
     ByteData byData = await rootBundle.load(widget.thumbAsset);
     final Uint8List bytes = Uint8List.view(byData.buffer);
-    final ui.Codec codec = await ui.instantiateImageCodec(bytes,
-        targetWidth: widget.thumbWidth, targetHeight: widget.thumbHeight);
-    ui.Image image = (await codec.getNextFrame()).image;
-    myShape = ImageThumbShape(image: image);
-    setState(() {});
+    final ui.Codec codec = await ui.instantiateImageCodec(bytes);
+    thumbImage = (await codec.getNextFrame()).image;
+    _updateThumbShape();
+  }
+
+  void _updateThumbShape() {
+    if (thumbImage != null) {
+      setState(() {
+        myShape = ImageThumbShape(
+          image: thumbImage!,
+          width: widget.thumbWidth.toDouble(),
+          height: widget.thumbHeight.toDouble(),
+        );
+      });
+    }
   }
 
   @override
