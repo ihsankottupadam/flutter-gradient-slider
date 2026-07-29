@@ -6,9 +6,28 @@ import 'package:flutter/services.dart';
 import 'package:gradient_slider/src/image_thumb_shape.dart';
 
 class GradientSlider extends StatefulWidget {
-  final String thumbAsset;
+  /// Asset path of the image used as the thumb.
+  ///
+  /// Leave this null to fall back to the default Material thumb.
+  final String? thumbAsset;
   final Widget slider;
+
+  /// Set to false to hide the thumb (and its overlay) entirely, leaving a
+  /// bare gradient track that can still be dragged.
+  final bool showThumb;
+
+  /// A fully custom thumb shape. Takes precedence over [thumbAsset], and is
+  /// ignored when [showThumb] is false.
+  final SliderComponentShape? thumbShape;
+
+  /// A custom overlay shape. When null, the overlay is hidden if [showThumb]
+  /// is false, and left to the Material default otherwise.
+  final SliderComponentShape? overlayShape;
+
+  /// Only used when [thumbAsset] is provided.
   final double thumbWidth;
+
+  /// Only used when [thumbAsset] is provided.
   final double thumbHeight;
   final double? trackHeight;
   final Gradient? activeTrackGradient;
@@ -19,8 +38,11 @@ class GradientSlider extends StatefulWidget {
 
   const GradientSlider(
       {super.key,
-      required this.thumbAsset,
+      this.thumbAsset,
       required this.slider,
+      this.showThumb = true,
+      this.thumbShape,
+      this.overlayShape,
       this.activeTrackGradient,
       this.thumbWidth = 50,
       this.thumbHeight = 50,
@@ -49,41 +71,84 @@ class _GradientSliderState extends State<GradientSlider> {
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.thumbAsset != widget.thumbAsset) {
+      // Covers null -> asset, asset -> null and asset -> other asset.
       _loadImage();
       return;
     }
 
-    if (oldWidget.thumbWidth != widget.thumbWidth ||
-        oldWidget.thumbHeight != widget.thumbHeight) {
+    if (thumbImage != null &&
+        (oldWidget.thumbWidth != widget.thumbWidth ||
+            oldWidget.thumbHeight != widget.thumbHeight)) {
       _updateThumbShape();
     }
   }
 
   _loadImage() async {
-    ByteData byData = await rootBundle.load(widget.thumbAsset);
-    final Uint8List bytes = Uint8List.view(byData.buffer);
-    final ui.Codec codec = await ui.instantiateImageCodec(bytes);
-    thumbImage = (await codec.getNextFrame()).image;
-    _updateThumbShape();
+    final asset = widget.thumbAsset;
+    if (asset == null) {
+      _clearThumb();
+      return;
+    }
+    try {
+      ByteData byData = await rootBundle.load(asset);
+      final Uint8List bytes = Uint8List.view(byData.buffer);
+      final ui.Codec codec = await ui.instantiateImageCodec(bytes);
+      final image = (await codec.getNextFrame()).image;
+      // Bail out if the asset changed again while this load was in flight.
+      if (!mounted || widget.thumbAsset != asset) return;
+      thumbImage = image;
+      _updateThumbShape();
+    } catch (_) {
+      // A missing or undecodable asset falls back to the default Material
+      // thumb instead of throwing across the async gap.
+      _clearThumb();
+    }
+  }
+
+  void _clearThumb() {
+    thumbImage = null;
+    if (myShape == null) return;
+    if (!mounted) {
+      myShape = null;
+      return;
+    }
+    setState(() => myShape = null);
   }
 
   void _updateThumbShape() {
-    if (thumbImage != null) {
-      setState(() {
-        myShape = ImageThumbShape(
-          image: thumbImage!,
-          width: widget.thumbWidth.toDouble(),
-          height: widget.thumbHeight.toDouble(),
-        );
-      });
+    if (thumbImage == null) {
+      _clearThumb();
+      return;
     }
+    if (!mounted) return;
+    setState(() {
+      myShape = ImageThumbShape(
+        image: thumbImage!,
+        width: widget.thumbWidth.toDouble(),
+        height: widget.thumbHeight.toDouble(),
+      );
+    });
+  }
+
+  /// Null means "let Slider fall back to the Material default thumb".
+  SliderComponentShape? get _resolvedThumbShape {
+    if (!widget.showThumb) return SliderComponentShape.noThumb;
+    return widget.thumbShape ?? myShape;
+  }
+
+  /// Null means "let Slider fall back to the Material default overlay".
+  SliderComponentShape? get _resolvedOverlayShape {
+    if (widget.overlayShape != null) return widget.overlayShape;
+    if (!widget.showThumb) return SliderComponentShape.noOverlay;
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
     return SliderTheme(
       data: SliderThemeData(
-        thumbShape: myShape,
+        thumbShape: _resolvedThumbShape,
+        overlayShape: _resolvedOverlayShape,
         trackHeight: widget.trackHeight,
         inactiveTrackColor: widget.inactiveTrackColor,
         trackShape: GradientSliderTrackShape(

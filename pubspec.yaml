@@ -1,6 +1,6 @@
 name: gradient_slider
 description: A slider widget, supports image thumb, track gradient and border
-version: 1.0.3
+version: 1.1.0
 homepage: https://github.com/ihsankottupadam/flutter-gradient-slider
 
 topics:

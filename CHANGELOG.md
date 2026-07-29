@@ -1,3 +1,10 @@
+## 1.1.0
+
+* `thumbAsset` is now optional — omit it to use the default Material thumb
+* Added `showThumb` to hide the thumb and its overlay entirely
+* Added `thumbShape` and `overlayShape` for fully custom shapes
+* A missing or undecodable thumb asset now falls back to the default thumb instead of throwing
+
 ## 1.0.3
 
 * Improved image thumb rendering quality
