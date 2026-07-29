@@ -67,9 +67,7 @@ GradientSlider(
 
 ### Styling the default thumb
 
-Set thumb colors on the `Slider` you pass to `slider:`, not on an outer `SliderTheme` —
-`GradientSlider` installs its own `SliderTheme`, which replaces rather than merges with any
-theme above it:
+Set the thumb color on the `Slider` you pass to `slider:`:
 
 ```dart
 GradientSlider(
@@ -77,6 +75,25 @@ GradientSlider(
     value: 0.5,
     thumbColor: Colors.white,
     onChanged: (value) {},
+  ),
+)
+```
+
+### Theming
+
+`GradientSlider` merges onto the inherited `SliderTheme` rather than replacing it, so anything
+it doesn't set itself — tick marks, value indicator, overlay color, and so on — can still be
+configured from a `SliderTheme` (or `ThemeData.sliderTheme`) above it:
+
+```dart
+SliderTheme(
+  data: const SliderThemeData(
+    activeTickMarkColor: Colors.white,
+    showValueIndicator: ShowValueIndicator.always,
+  ),
+  child: GradientSlider(
+    activeTrackGradient: const LinearGradient(colors: [Colors.pink, Colors.blue]),
+    slider: Slider(value: 0.5, divisions: 5, label: '50%', onChanged: (value) {}),
   ),
 )
 ```

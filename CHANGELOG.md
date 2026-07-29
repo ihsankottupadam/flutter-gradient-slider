@@ -4,6 +4,9 @@
 * Added `showThumb` to hide the thumb and its overlay entirely
 * Added `thumbShape` and `overlayShape` for fully custom shapes
 * A missing or undecodable thumb asset now falls back to the default thumb instead of throwing
+* Settings from an inherited `SliderTheme` are now preserved instead of being discarded, so tick
+  marks, the value indicator and the overlay can be themed from above the widget
+* Fixed: a disabled slider kept painting its track gradient at full strength
 
 ## 1.0.3
 

@@ -145,8 +145,11 @@ class _GradientSliderState extends State<GradientSlider> {
 
   @override
   Widget build(BuildContext context) {
+    // Merge onto the inherited theme rather than replacing it, so any
+    // SliderTheme above this widget (tick marks, value indicator, overlay
+    // color, ...) still applies. A null field means "keep what was inherited".
     return SliderTheme(
-      data: SliderThemeData(
+      data: SliderTheme.of(context).copyWith(
         thumbShape: _resolvedThumbShape,
         overlayShape: _resolvedOverlayShape,
         trackHeight: widget.trackHeight,
@@ -208,32 +211,59 @@ class GradientSliderTrackShape extends SliderTrackShape
       isEnabled: isEnabled,
       isDiscrete: isDiscrete,
     );
-    final ColorTween activeTrackColorTween = ColorTween(
-        begin: sliderTheme.disabledActiveTrackColor, end: Colors.white);
-    final ColorTween inactiveTrackColorTween = ColorTween(
-        begin: sliderTheme.disabledInactiveTrackColor,
-        end: inactiveTrackGradient != null
-            ? Colors.white
-            : sliderTheme.inactiveTrackColor);
+    // 0 = fully disabled, 1 = fully enabled.
+    final double enabledT = enableAnimation.value.clamp(0.0, 1.0);
+
+    // A Paint's `color` is ignored once a `shader` is set, so a gradient can
+    // only be dimmed through a colorFilter. Modulating by white at alpha t
+    // scales the gradient's alpha to t while leaving its hues untouched.
+    ColorFilter? fade() => enabledT >= 1.0
+        ? null
+        : ColorFilter.mode(
+            Color.fromRGBO(255, 255, 255, enabledT), BlendMode.modulate);
+
     final Paint activePaint = Paint()
       ..shader = activeTrackGradient.createShader(trackRect)
-      ..color = activeTrackColorTween.evaluate(enableAnimation)!;
-    final Paint inactivePaint = Paint()
-      ..color = inactiveTrackColorTween.evaluate(enableAnimation)!;
+      ..colorFilter = fade();
+
+    final Paint inactivePaint = Paint();
     if (inactiveTrackGradient != null) {
-      inactivePaint.shader = inactiveTrackGradient!.createShader(trackRect);
+      inactivePaint
+        ..shader = inactiveTrackGradient!.createShader(trackRect)
+        ..colorFilter = fade();
+    } else {
+      // No shader here, so a plain colour lerp is enough.
+      inactivePaint.color = Color.lerp(sliderTheme.disabledInactiveTrackColor,
+          sliderTheme.inactiveTrackColor, enabledT)!;
     }
+
+    // Painted beneath the faded gradients so the disabled colour shows
+    // through instead of whatever happens to be behind the slider.
+    final Paint? activeBasePaint = enabledT >= 1.0
+        ? null
+        : (Paint()..color = sliderTheme.disabledActiveTrackColor!);
+    final Paint? inactiveBasePaint =
+        (enabledT >= 1.0 || inactiveTrackGradient == null)
+            ? null
+            : (Paint()..color = sliderTheme.disabledInactiveTrackColor!);
+
     final canvas = context.canvas;
     final Paint leftTrackPaint;
     final Paint rightTrackPaint;
+    final Paint? leftBasePaint;
+    final Paint? rightBasePaint;
     switch (textDirection) {
       case TextDirection.ltr:
         leftTrackPaint = activePaint;
         rightTrackPaint = inactivePaint;
+        leftBasePaint = activeBasePaint;
+        rightBasePaint = inactiveBasePaint;
         break;
       case TextDirection.rtl:
         leftTrackPaint = inactivePaint;
         rightTrackPaint = activePaint;
+        leftBasePaint = inactiveBasePaint;
+        rightBasePaint = activeBasePaint;
         break;
     }
 
@@ -241,44 +271,44 @@ class GradientSliderTrackShape extends SliderTrackShape
     final Radius activeTrackRadius =
         Radius.circular((trackRect.height + additionalActiveTrackHeight) / 2);
 
-    canvas.drawRRect(
-      RRect.fromLTRBAndCorners(
-        trackRect.left,
-        (textDirection == TextDirection.ltr)
-            ? trackRect.top - (additionalActiveTrackHeight / 2)
-            : trackRect.top,
-        thumbCenter.dx,
-        (textDirection == TextDirection.ltr)
-            ? trackRect.bottom + (additionalActiveTrackHeight / 2)
-            : trackRect.bottom,
-        topLeft: (textDirection == TextDirection.ltr)
-            ? activeTrackRadius
-            : trackRadius,
-        bottomLeft: (textDirection == TextDirection.ltr)
-            ? activeTrackRadius
-            : trackRadius,
-      ),
-      leftTrackPaint,
+    final RRect leftTrackRRect = RRect.fromLTRBAndCorners(
+      trackRect.left,
+      (textDirection == TextDirection.ltr)
+          ? trackRect.top - (additionalActiveTrackHeight / 2)
+          : trackRect.top,
+      thumbCenter.dx,
+      (textDirection == TextDirection.ltr)
+          ? trackRect.bottom + (additionalActiveTrackHeight / 2)
+          : trackRect.bottom,
+      topLeft:
+          (textDirection == TextDirection.ltr) ? activeTrackRadius : trackRadius,
+      bottomLeft:
+          (textDirection == TextDirection.ltr) ? activeTrackRadius : trackRadius,
     );
-    canvas.drawRRect(
-      RRect.fromLTRBAndCorners(
-        thumbCenter.dx,
-        (textDirection == TextDirection.rtl)
-            ? trackRect.top - (additionalActiveTrackHeight / 2)
-            : trackRect.top,
-        trackRect.right,
-        (textDirection == TextDirection.rtl)
-            ? trackRect.bottom + (additionalActiveTrackHeight / 2)
-            : trackRect.bottom,
-        topRight: (textDirection == TextDirection.rtl)
-            ? activeTrackRadius
-            : trackRadius,
-        bottomRight: (textDirection == TextDirection.rtl)
-            ? activeTrackRadius
-            : trackRadius,
-      ),
-      rightTrackPaint,
+    final RRect rightTrackRRect = RRect.fromLTRBAndCorners(
+      thumbCenter.dx,
+      (textDirection == TextDirection.rtl)
+          ? trackRect.top - (additionalActiveTrackHeight / 2)
+          : trackRect.top,
+      trackRect.right,
+      (textDirection == TextDirection.rtl)
+          ? trackRect.bottom + (additionalActiveTrackHeight / 2)
+          : trackRect.bottom,
+      topRight:
+          (textDirection == TextDirection.rtl) ? activeTrackRadius : trackRadius,
+      bottomRight:
+          (textDirection == TextDirection.rtl) ? activeTrackRadius : trackRadius,
     );
+
+    if (leftBasePaint != null) {
+      canvas.drawRRect(leftTrackRRect, leftBasePaint);
+    }
+    canvas.drawRRect(leftTrackRRect, leftTrackPaint);
+
+    if (rightBasePaint != null) {
+      canvas.drawRRect(rightTrackRRect, rightBasePaint);
+    }
+    canvas.drawRRect(rightTrackRRect, rightTrackPaint);
     if (trackBorder != null || trackBorderColor != null) {
       final strokePaint = Paint()
         ..color = trackBorderColor ?? Colors.black
