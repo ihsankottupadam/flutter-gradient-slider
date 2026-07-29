@@ -5,6 +5,9 @@
   only come from a local asset path
 * Exported `ImageThumbShape`, which was missing while its range counterpart was
   exported
+* Added `additionalActiveTrackHeight`, previously hardcoded to Material's 2 for
+  sliders and unavailable for range sliders. Null keeps each widget's default
+  (2 and 0); an explicit value applies to both
 * Added `trackRadius` for square or custom-radius tracks. The track was always
   fully rounded; null keeps that default and over-large values are clamped
 * Added `gradientSpansTrack`. The gradient stays anchored to the whole track by

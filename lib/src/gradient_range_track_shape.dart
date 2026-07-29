@@ -23,6 +23,7 @@ class GradientRangeSliderTrackShape extends RangeSliderTrackShape
     this.trackBorderColor,
     this.gradientSpansTrack = true,
     this.trackRadius,
+    this.additionalActiveTrackHeight,
   });
 
   /// Gradient painted across the span between the two thumbs.
@@ -50,6 +51,14 @@ class GradientRangeSliderTrackShape extends RangeSliderTrackShape
   /// Corner radius of the track. Null keeps the fully-rounded default;
   /// 0 gives square corners.
   final double? trackRadius;
+
+  /// How much taller the span between the thumbs is drawn than the rest of the
+  /// track.
+  ///
+  /// Null keeps Material's range default of 0, matching
+  /// [RoundedRectRangeSliderTrackShape]. [RangeSliderTrackShape.paint] has no
+  /// such parameter, so this is implemented here rather than inherited.
+  final double? additionalActiveTrackHeight;
 
   @override
   bool get isRounded => true;
@@ -124,12 +133,14 @@ class GradientRangeSliderTrackShape extends RangeSliderTrackShape
       bottomLeft: radius,
     );
 
-    // The active span between the thumbs: square on both ends.
+    // The active span between the thumbs: square on both ends, and optionally
+    // taller than the segments outside it.
+    final double extraHeight = additionalActiveTrackHeight ?? 0;
     final RRect middleRRect = RRect.fromLTRBAndCorners(
       leftThumbOffset.dx,
-      trackRect.top,
+      trackRect.top - (extraHeight / 2),
       rightThumbOffset.dx,
-      trackRect.bottom,
+      trackRect.bottom + (extraHeight / 2),
     );
 
     // Outer right segment.

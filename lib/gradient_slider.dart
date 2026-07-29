@@ -124,6 +124,13 @@ class GradientSlider extends StatefulWidget {
   /// square corners. Larger values are clamped to half the height.
   final double? trackRadius;
 
+  /// How much taller the active portion is drawn than the rest of the track.
+  ///
+  /// Null keeps each widget's Material default, which differ: 2 for a
+  /// [Slider], 0 for a [RangeSlider]. Set it explicitly to make the two match,
+  /// or to 0 for a uniform-height track.
+  final double? additionalActiveTrackHeight;
+
   const GradientSlider(
       {super.key,
       this.thumbAsset,
@@ -142,7 +149,8 @@ class GradientSlider extends StatefulWidget {
       this.trackBorder,
       this.trackBorderColor,
       this.gradientSpansTrack = true,
-      this.trackRadius});
+      this.trackRadius,
+      this.additionalActiveTrackHeight});
 
   @override
   State<GradientSlider> createState() => _GradientSliderState();
@@ -304,6 +312,7 @@ class _GradientSliderState extends State<GradientSlider> {
           trackBorderColor: widget.trackBorderColor,
           gradientSpansTrack: widget.gradientSpansTrack,
           trackRadius: widget.trackRadius,
+          additionalActiveTrackHeight: widget.additionalActiveTrackHeight,
         ),
         // RangeSlider reads its own pair of fields; a plain Slider ignores
         // these, so setting both keeps one widget working for either child.
@@ -316,6 +325,7 @@ class _GradientSliderState extends State<GradientSlider> {
           trackBorderColor: widget.trackBorderColor,
           gradientSpansTrack: widget.gradientSpansTrack,
           trackRadius: widget.trackRadius,
+          additionalActiveTrackHeight: widget.additionalActiveTrackHeight,
         ),
       ),
       child: widget.slider,
@@ -344,6 +354,7 @@ class GradientSliderTrackShape extends SliderTrackShape
     this.trackBorderColor,
     this.gradientSpansTrack = true,
     this.trackRadius,
+    this.additionalActiveTrackHeight,
   });
 
   /// Gradient painted across the portion of the track before the thumb.
@@ -374,6 +385,11 @@ class GradientSliderTrackShape extends SliderTrackShape
   /// 0 gives square corners.
   final double? trackRadius;
 
+  /// How much taller the active side is drawn than the rest of the track.
+  ///
+  /// Null keeps Material's default of 2; 0 makes both sides the same height.
+  final double? additionalActiveTrackHeight;
+
   @override
   void paint(
     PaintingContext context,
@@ -403,6 +419,10 @@ class GradientSliderTrackShape extends SliderTrackShape
       isEnabled: isEnabled,
       isDiscrete: isDiscrete,
     );
+    // Slider never passes additionalActiveTrackHeight, so the parameter only
+    // ever holds its default; the field is what callers can actually set.
+    final double extraHeight =
+        this.additionalActiveTrackHeight ?? additionalActiveTrackHeight;
     // 0 = fully disabled, 1 = fully enabled.
     final double enabledT = enableAnimation.value.clamp(0.0, 1.0);
     final TrackPaints paints = buildTrackPaints(
@@ -448,17 +468,17 @@ class GradientSliderTrackShape extends SliderTrackShape
     final Radius radius = resolveTrackRadius(trackRadius, trackRect.height);
     // The active side is drawn slightly taller, so its radius is resolved
     // against that larger height.
-    final Radius activeRadius = resolveTrackRadius(
-        trackRadius, trackRect.height + additionalActiveTrackHeight);
+    final Radius activeRadius =
+        resolveTrackRadius(trackRadius, trackRect.height + extraHeight);
 
     final RRect leftTrackRRect = RRect.fromLTRBAndCorners(
       trackRect.left,
       (textDirection == TextDirection.ltr)
-          ? trackRect.top - (additionalActiveTrackHeight / 2)
+          ? trackRect.top - (extraHeight / 2)
           : trackRect.top,
       thumbCenter.dx,
       (textDirection == TextDirection.ltr)
-          ? trackRect.bottom + (additionalActiveTrackHeight / 2)
+          ? trackRect.bottom + (extraHeight / 2)
           : trackRect.bottom,
       topLeft: (textDirection == TextDirection.ltr) ? activeRadius : radius,
       bottomLeft: (textDirection == TextDirection.ltr) ? activeRadius : radius,
@@ -466,11 +486,11 @@ class GradientSliderTrackShape extends SliderTrackShape
     final RRect rightTrackRRect = RRect.fromLTRBAndCorners(
       thumbCenter.dx,
       (textDirection == TextDirection.rtl)
-          ? trackRect.top - (additionalActiveTrackHeight / 2)
+          ? trackRect.top - (extraHeight / 2)
           : trackRect.top,
       trackRect.right,
       (textDirection == TextDirection.rtl)
-          ? trackRect.bottom + (additionalActiveTrackHeight / 2)
+          ? trackRect.bottom + (extraHeight / 2)
           : trackRect.bottom,
       topRight: (textDirection == TextDirection.rtl) ? activeRadius : radius,
       bottomRight: (textDirection == TextDirection.rtl) ? activeRadius : radius,

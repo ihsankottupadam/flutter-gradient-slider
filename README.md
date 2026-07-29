@@ -116,6 +116,21 @@ GradientSlider(
 )
 ```
 
+### Active track height
+
+Material draws a `Slider`'s active side 2px taller than its inactive side, but
+draws a `RangeSlider` uniformly. `additionalActiveTrackHeight` overrides both —
+set `0` for a flat track, or set it explicitly to make the two widgets match:
+
+```dart
+GradientSlider(
+  trackHeight: 10,
+  additionalActiveTrackHeight: 0,
+  activeTrackGradient: const LinearGradient(colors: [Colors.pink, Colors.blue]),
+  slider: Slider(value: 0.5, onChanged: (value) {}),
+)
+```
+
 ### Styling the default thumb
 
 Set the thumb color on the `Slider` you pass to `slider:`:
@@ -158,9 +173,8 @@ Two differences worth knowing:
 
 * `showThumb: false` applies to `Slider` only. A range slider always keeps its
   thumbs, since without them there is no cue as to which end you are dragging.
-* The active span cannot be drawn taller than the rest of the track —
-  `RangeSliderTrackShape.paint` has no `additionalActiveTrackHeight` parameter,
-  unlike the single-thumb equivalent.
+* `additionalActiveTrackHeight` defaults to 0 here and 2 for a `Slider`,
+  matching Material. Set it explicitly and both honour it.
 
 ### Theming
 
@@ -200,3 +214,4 @@ SliderTheme(
 | Color | trackBorderColor
 | bool | gradientSpansTrack
 | double? | trackRadius
+| double? | additionalActiveTrackHeight
