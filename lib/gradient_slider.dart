@@ -131,6 +131,13 @@ class GradientSlider extends StatefulWidget {
   /// or to 0 for a uniform-height track.
   final double? additionalActiveTrackHeight;
 
+  /// Gradient for the secondary (buffer) track, drawn between the thumb and
+  /// [Slider.secondaryTrackValue] — useful for download or playback buffers.
+  ///
+  /// When null the buffer uses [SliderThemeData.secondaryActiveTrackColor].
+  /// [RangeSlider] has no secondary track, so this only affects [Slider].
+  final Gradient? secondaryTrackGradient;
+
   const GradientSlider(
       {super.key,
       this.thumbAsset,
@@ -150,7 +157,8 @@ class GradientSlider extends StatefulWidget {
       this.trackBorderColor,
       this.gradientSpansTrack = true,
       this.trackRadius,
-      this.additionalActiveTrackHeight});
+      this.additionalActiveTrackHeight,
+      this.secondaryTrackGradient});
 
   @override
   State<GradientSlider> createState() => _GradientSliderState();
@@ -313,6 +321,7 @@ class _GradientSliderState extends State<GradientSlider> {
           gradientSpansTrack: widget.gradientSpansTrack,
           trackRadius: widget.trackRadius,
           additionalActiveTrackHeight: widget.additionalActiveTrackHeight,
+          secondaryTrackGradient: widget.secondaryTrackGradient,
         ),
         // RangeSlider reads its own pair of fields; a plain Slider ignores
         // these, so setting both keeps one widget working for either child.
@@ -355,6 +364,7 @@ class GradientSliderTrackShape extends SliderTrackShape
     this.gradientSpansTrack = true,
     this.trackRadius,
     this.additionalActiveTrackHeight,
+    this.secondaryTrackGradient,
   });
 
   /// Gradient painted across the portion of the track before the thumb.
@@ -389,6 +399,13 @@ class GradientSliderTrackShape extends SliderTrackShape
   ///
   /// Null keeps Material's default of 2; 0 makes both sides the same height.
   final double? additionalActiveTrackHeight;
+
+  /// Gradient for the secondary (buffer) track drawn between the thumb and
+  /// [Slider.secondaryTrackValue].
+  ///
+  /// When null the track falls back to
+  /// [SliderThemeData.secondaryActiveTrackColor].
+  final Gradient? secondaryTrackGradient;
 
   @override
   void paint(
@@ -498,6 +515,53 @@ class GradientSliderTrackShape extends SliderTrackShape
 
     paintSegment(canvas, leftTrackRRect, leftTrackPaint, leftBasePaint);
     paintSegment(canvas, rightTrackRRect, rightTrackPaint, rightBasePaint);
+
+    // The buffer track sits on top of the inactive side, between the thumb and
+    // Slider.secondaryTrackValue. Like Material, it is only drawn when that
+    // value is ahead of the thumb in the reading direction.
+    final bool isLtr = textDirection == TextDirection.ltr;
+    final bool showSecondary = secondaryOffset != null &&
+        (isLtr
+            ? secondaryOffset.dx > thumbCenter.dx
+            : secondaryOffset.dx < thumbCenter.dx);
+    final Color? secondaryColor = Color.lerp(
+        sliderTheme.disabledSecondaryActiveTrackColor,
+        sliderTheme.secondaryActiveTrackColor,
+        enabledT);
+    // A null colour with no gradient means the theme has nothing to draw with;
+    // skip the segment but still paint the border below.
+    if (showSecondary &&
+        (secondaryTrackGradient != null || secondaryColor != null)) {
+      final Rect segment = isLtr
+          ? Rect.fromLTRB(thumbCenter.dx, trackRect.top, secondaryOffset.dx,
+              trackRect.bottom)
+          : Rect.fromLTRB(secondaryOffset.dx, trackRect.top, thumbCenter.dx,
+              trackRect.bottom);
+      final Paint secondaryPaint = Paint();
+      if (secondaryTrackGradient != null) {
+        secondaryPaint
+          ..shader = secondaryTrackGradient!
+              .createShader(gradientSpansTrack ? trackRect : segment)
+          ..colorFilter = fadeFilter(enabledT);
+      } else {
+        secondaryPaint.color = secondaryColor!;
+      }
+      // Rounded only on its outer edge, where it meets the track end.
+      canvas.drawRRect(
+        RRect.fromLTRBAndCorners(
+          segment.left,
+          segment.top,
+          segment.right,
+          segment.bottom,
+          topLeft: isLtr ? Radius.zero : radius,
+          bottomLeft: isLtr ? Radius.zero : radius,
+          topRight: isLtr ? radius : Radius.zero,
+          bottomRight: isLtr ? radius : Radius.zero,
+        ),
+        secondaryPaint,
+      );
+    }
+
     paintTrackBorder(canvas, trackRect, radius, trackBorder, trackBorderColor);
   }
 }

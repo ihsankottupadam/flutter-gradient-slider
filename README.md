@@ -131,6 +131,29 @@ GradientSlider(
 )
 ```
 
+### Secondary (buffer) track
+
+`Slider.secondaryTrackValue` now renders — the buffer is drawn between the thumb
+and that value, as in a download or playback progress bar. It uses
+`SliderThemeData.secondaryActiveTrackColor` unless you pass
+`secondaryTrackGradient`:
+
+```dart
+GradientSlider(
+  activeTrackGradient: const LinearGradient(colors: [Colors.pink, Colors.blue]),
+  secondaryTrackGradient:
+      const LinearGradient(colors: [Colors.white24, Colors.white38]),
+  slider: Slider(
+    value: 0.3,
+    secondaryTrackValue: 0.7,
+    onChanged: (value) {},
+  ),
+)
+```
+
+As in Material, the buffer only appears when the secondary value is ahead of the
+thumb. `RangeSlider` has no secondary track, so this applies to `Slider` only.
+
 ### Styling the default thumb
 
 Set the thumb color on the `Slider` you pass to `slider:`:
@@ -215,3 +238,4 @@ SliderTheme(
 | bool | gradientSpansTrack
 | double? | trackRadius
 | double? | additionalActiveTrackHeight
+| Gradient? | secondaryTrackGradient

@@ -5,6 +5,9 @@
   only come from a local asset path
 * Exported `ImageThumbShape`, which was missing while its range counterpart was
   exported
+* `Slider.secondaryTrackValue` now renders a buffer track; previously the
+  secondary offset was accepted and silently ignored. Added
+  `secondaryTrackGradient` to style it
 * Added `additionalActiveTrackHeight`, previously hardcoded to Material's 2 for
   sliders and unavailable for range sliders. Null keeps each widget's default
   (2 and 0); an explicit value applies to both
