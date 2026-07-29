@@ -1,17 +1,21 @@
 
- A slider widget, supports image thumb, track gradient and border
+ Slider and range slider with gradient tracks, image thumbs, a buffer track and full track styling.
 
 ![Image thumb, default Material thumb, range slider and no thumb](https://raw.githubusercontent.com/ihsankottupadam/flutter-gradient-slider/master/screenshots/slider_modes.png)
 
 ## Features
 
-* Custom thumb image
-* Default Material thumb, or no thumb at all
 * Works with both `Slider` and `RangeSlider`
-* Active track gradient
-* Inactive track gradient
-* Track border
-* Track border color
+* Custom thumb image, from an asset or any `ImageProvider`
+* Default Material thumb, or no thumb at all
+* Active and inactive track gradients
+* Gradient anchored to the track, or compressed into the active portion
+* Secondary (buffer) track for download and playback progress
+* Track border width and color
+* Track corner radius, from fully rounded to square
+* Configurable active track height
+* Fades correctly when the slider is disabled
+* Keeps any inherited `SliderTheme` settings
 
 ## Usage
 

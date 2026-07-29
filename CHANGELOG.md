@@ -1,3 +1,9 @@
+## 1.3.1
+
+* Refreshed the README feature list, the tagline and the package description,
+  which still described only the 1.0 feature set
+* Added a `range-slider` topic
+
 ## 1.3.0
 
 * Added `thumbImage`, accepting any `ImageProvider` — `NetworkImage`,
