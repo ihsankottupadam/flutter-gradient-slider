@@ -1,3 +1,11 @@
+## 1.3.0
+
+* Added `thumbImage`, accepting any `ImageProvider` — `NetworkImage`,
+  `FileImage`, `MemoryImage` or a `package:` asset. Previously the thumb could
+  only come from a local asset path
+* Exported `ImageThumbShape`, which was missing while its range counterpart was
+  exported
+
 ## 1.2.0
 
 * `RangeSlider` is now supported — pass one as `slider:` and the gradient fills

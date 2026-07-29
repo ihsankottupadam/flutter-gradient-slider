@@ -1,5 +1,6 @@
 library gradient_slider;
 
+import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +11,7 @@ import 'package:gradient_slider/src/track_painting.dart';
 
 export 'package:gradient_slider/src/gradient_range_track_shape.dart';
 export 'package:gradient_slider/src/image_range_thumb_shape.dart';
+export 'package:gradient_slider/src/image_thumb_shape.dart';
 
 /// Wraps a [Slider] or [RangeSlider] so its track is painted with a gradient,
 /// with an optional image thumb.
@@ -18,7 +20,7 @@ export 'package:gradient_slider/src/image_range_thumb_shape.dart';
 ///
 /// The thumb has three modes:
 ///
-/// * pass [thumbAsset] for an image thumb,
+/// * pass [thumbAsset] or [thumbImage] for an image thumb,
 /// * pass nothing for the default Material thumb,
 /// * pass `showThumb: false` for no thumb at all.
 ///
@@ -37,8 +39,22 @@ export 'package:gradient_slider/src/image_range_thumb_shape.dart';
 class GradientSlider extends StatefulWidget {
   /// Asset path of the image used as the thumb.
   ///
-  /// Leave this null to fall back to the default Material thumb.
+  /// Leave this and [thumbImage] null to fall back to the default Material
+  /// thumb.
   final String? thumbAsset;
+
+  /// Any [ImageProvider] to use as the thumb — [NetworkImage], [FileImage],
+  /// [MemoryImage], or an [AssetImage] from another package.
+  ///
+  /// Takes precedence over [thumbAsset].
+  ///
+  /// ```dart
+  /// GradientSlider(
+  ///   thumbImage: const NetworkImage('https://example.com/thumb.png'),
+  ///   slider: Slider(value: value, onChanged: onChanged),
+  /// )
+  /// ```
+  final ImageProvider? thumbImage;
 
   /// The [Slider] or [RangeSlider] to apply the gradient track and thumb to.
   final Widget slider;
@@ -50,14 +66,14 @@ class GradientSlider extends StatefulWidget {
   /// without them there is no cue as to which end is being dragged.
   final bool showThumb;
 
-  /// A fully custom thumb shape. Takes precedence over [thumbAsset], and is
-  /// ignored when [showThumb] is false.
+  /// A fully custom thumb shape. Takes precedence over [thumbAsset] and
+  /// [thumbImage], and is ignored when [showThumb] is false.
   final SliderComponentShape? thumbShape;
 
   /// A fully custom thumb shape for a [RangeSlider].
   ///
   /// The range counterpart of [thumbShape]; takes precedence over
-  /// [thumbAsset] and is ignored when [showThumb] is false.
+  /// [thumbAsset] and [thumbImage].
   final RangeSliderThumbShape? rangeThumbShape;
 
   /// A custom overlay shape. When null, the overlay is hidden if [showThumb]
@@ -66,10 +82,10 @@ class GradientSlider extends StatefulWidget {
   /// [Slider] and [RangeSlider] share this field, so it applies to both.
   final SliderComponentShape? overlayShape;
 
-  /// Only used when [thumbAsset] is provided.
+  /// Only used when [thumbAsset] or [thumbImage] is provided.
   final double thumbWidth;
 
-  /// Only used when [thumbAsset] is provided.
+  /// Only used when [thumbAsset] or [thumbImage] is provided.
   final double thumbHeight;
 
   /// Height of the track. Falls back to the inherited theme when null.
@@ -96,6 +112,7 @@ class GradientSlider extends StatefulWidget {
   const GradientSlider(
       {super.key,
       this.thumbAsset,
+      this.thumbImage,
       required this.slider,
       this.showThumb = true,
       this.thumbShape,
@@ -117,7 +134,9 @@ class GradientSlider extends StatefulWidget {
 class _GradientSliderState extends State<GradientSlider> {
   ImageThumbShape? myShape;
   ImageRangeThumbShape? myRangeShape;
-  ui.Image? thumbImage;
+
+  /// The decoded thumb, once [_loadImage] has resolved it.
+  ui.Image? decodedThumb;
 
   @override
   void initState() {
@@ -129,43 +148,74 @@ class _GradientSliderState extends State<GradientSlider> {
   void didUpdateWidget(GradientSlider oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.thumbAsset != widget.thumbAsset) {
-      // Covers null -> asset, asset -> null and asset -> other asset.
+    if (oldWidget.thumbAsset != widget.thumbAsset ||
+        oldWidget.thumbImage != widget.thumbImage) {
+      // Covers null -> source, source -> null and source -> other source.
       _loadImage();
       return;
     }
 
-    if (thumbImage != null &&
+    if (decodedThumb != null &&
         (oldWidget.thumbWidth != widget.thumbWidth ||
             oldWidget.thumbHeight != widget.thumbHeight)) {
       _updateThumbShape();
     }
   }
 
+  /// True when the widget's thumb source changed while a load was in flight.
+  bool _sourceChanged(String? asset, ImageProvider? provider) =>
+      widget.thumbAsset != asset || widget.thumbImage != provider;
+
   Future<void> _loadImage() async {
     final asset = widget.thumbAsset;
-    if (asset == null) {
+    final provider = widget.thumbImage;
+    if (asset == null && provider == null) {
       _clearThumb();
       return;
     }
     try {
-      ByteData byData = await rootBundle.load(asset);
-      final Uint8List bytes = Uint8List.view(byData.buffer);
-      final ui.Codec codec = await ui.instantiateImageCodec(bytes);
-      final image = (await codec.getNextFrame()).image;
-      // Bail out if the asset changed again while this load was in flight.
-      if (!mounted || widget.thumbAsset != asset) return;
-      thumbImage = image;
+      // An explicit provider wins; otherwise decode the asset path directly.
+      final ui.Image image = provider != null
+          ? await _resolveProvider(provider)
+          : await _decodeAsset(asset!);
+      // Bail out if the source changed again while this load was in flight.
+      if (!mounted || _sourceChanged(asset, provider)) return;
+      decodedThumb = image;
       _updateThumbShape();
     } catch (_) {
-      // A missing or undecodable asset falls back to the default Material
+      // A missing or undecodable image falls back to the default Material
       // thumb instead of throwing across the async gap.
       _clearThumb();
     }
   }
 
+  Future<ui.Image> _decodeAsset(String asset) async {
+    final ByteData byData = await rootBundle.load(asset);
+    final Uint8List bytes = Uint8List.view(byData.buffer);
+    final ui.Codec codec = await ui.instantiateImageCodec(bytes);
+    return (await codec.getNextFrame()).image;
+  }
+
+  Future<ui.Image> _resolveProvider(ImageProvider provider) {
+    final Completer<ui.Image> completer = Completer<ui.Image>();
+    final ImageStream stream = provider.resolve(ImageConfiguration.empty);
+    late final ImageStreamListener listener;
+    listener = ImageStreamListener(
+      (ImageInfo info, bool _) {
+        stream.removeListener(listener);
+        if (!completer.isCompleted) completer.complete(info.image);
+      },
+      onError: (Object error, StackTrace? stackTrace) {
+        stream.removeListener(listener);
+        if (!completer.isCompleted) completer.completeError(error);
+      },
+    );
+    stream.addListener(listener);
+    return completer.future;
+  }
+
   void _clearThumb() {
-    thumbImage = null;
+    decodedThumb = null;
     if (myShape == null && myRangeShape == null) return;
     if (!mounted) {
       myShape = null;
@@ -179,19 +229,19 @@ class _GradientSliderState extends State<GradientSlider> {
   }
 
   void _updateThumbShape() {
-    if (thumbImage == null) {
+    if (decodedThumb == null) {
       _clearThumb();
       return;
     }
     if (!mounted) return;
     setState(() {
       myShape = ImageThumbShape(
-        image: thumbImage!,
+        image: decodedThumb!,
         width: widget.thumbWidth.toDouble(),
         height: widget.thumbHeight.toDouble(),
       );
       myRangeShape = ImageRangeThumbShape(
-        image: thumbImage!,
+        image: decodedThumb!,
         width: widget.thumbWidth.toDouble(),
         height: widget.thumbHeight.toDouble(),
       );

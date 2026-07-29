@@ -45,6 +45,18 @@ GradientSlider(
 )
 ```
 
+Any `ImageProvider` works too — network, file, memory, or a `package:` asset —
+via `thumbImage`, which takes precedence over `thumbAsset`:
+
+```dart
+GradientSlider(
+  thumbImage: const NetworkImage('https://example.com/thumb.png'),
+  thumbHeight: 30,
+  thumbWidth: 30,
+  slider: Slider(value: 0.5, onChanged: (value) {}),
+)
+```
+
 **Default Material thumb** — just omit `thumbAsset`:
 
 ```dart
@@ -139,6 +151,7 @@ SliderTheme(
 | Type | Properties | 
 | --- |:---:| 
 | String? | thumbAsset
+| ImageProvider? | thumbImage
 | double | thumbHeight
 | double | thumbWidth
 | bool | showThumb
