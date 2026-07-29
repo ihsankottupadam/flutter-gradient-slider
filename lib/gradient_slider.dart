@@ -118,6 +118,12 @@ class GradientSlider extends StatefulWidget {
   /// portion instead — the span between the thumbs, for a [RangeSlider].
   final bool gradientSpansTrack;
 
+  /// Corner radius of the track.
+  ///
+  /// Null keeps the fully-rounded default (half the track height); 0 gives
+  /// square corners. Larger values are clamped to half the height.
+  final double? trackRadius;
+
   const GradientSlider(
       {super.key,
       this.thumbAsset,
@@ -135,7 +141,8 @@ class GradientSlider extends StatefulWidget {
       this.inactiveTrackGradient,
       this.trackBorder,
       this.trackBorderColor,
-      this.gradientSpansTrack = true});
+      this.gradientSpansTrack = true,
+      this.trackRadius});
 
   @override
   State<GradientSlider> createState() => _GradientSliderState();
@@ -296,6 +303,7 @@ class _GradientSliderState extends State<GradientSlider> {
           trackBorder: widget.trackBorder,
           trackBorderColor: widget.trackBorderColor,
           gradientSpansTrack: widget.gradientSpansTrack,
+          trackRadius: widget.trackRadius,
         ),
         // RangeSlider reads its own pair of fields; a plain Slider ignores
         // these, so setting both keeps one widget working for either child.
@@ -307,6 +315,7 @@ class _GradientSliderState extends State<GradientSlider> {
           trackBorder: widget.trackBorder,
           trackBorderColor: widget.trackBorderColor,
           gradientSpansTrack: widget.gradientSpansTrack,
+          trackRadius: widget.trackRadius,
         ),
       ),
       child: widget.slider,
@@ -334,6 +343,7 @@ class GradientSliderTrackShape extends SliderTrackShape
     this.trackBorder,
     this.trackBorderColor,
     this.gradientSpansTrack = true,
+    this.trackRadius,
   });
 
   /// Gradient painted across the portion of the track before the thumb.
@@ -359,6 +369,10 @@ class GradientSliderTrackShape extends SliderTrackShape
   /// When false it is compressed into the active portion, so the full ramp is
   /// visible no matter where the thumb sits.
   final bool gradientSpansTrack;
+
+  /// Corner radius of the track. Null keeps the fully-rounded default;
+  /// 0 gives square corners.
+  final double? trackRadius;
 
   @override
   void paint(
@@ -431,9 +445,11 @@ class GradientSliderTrackShape extends SliderTrackShape
         break;
     }
 
-    final Radius trackRadius = Radius.circular(trackRect.height / 2);
-    final Radius activeTrackRadius =
-        Radius.circular((trackRect.height + additionalActiveTrackHeight) / 2);
+    final Radius radius = resolveTrackRadius(trackRadius, trackRect.height);
+    // The active side is drawn slightly taller, so its radius is resolved
+    // against that larger height.
+    final Radius activeRadius = resolveTrackRadius(
+        trackRadius, trackRect.height + additionalActiveTrackHeight);
 
     final RRect leftTrackRRect = RRect.fromLTRBAndCorners(
       trackRect.left,
@@ -444,12 +460,8 @@ class GradientSliderTrackShape extends SliderTrackShape
       (textDirection == TextDirection.ltr)
           ? trackRect.bottom + (additionalActiveTrackHeight / 2)
           : trackRect.bottom,
-      topLeft: (textDirection == TextDirection.ltr)
-          ? activeTrackRadius
-          : trackRadius,
-      bottomLeft: (textDirection == TextDirection.ltr)
-          ? activeTrackRadius
-          : trackRadius,
+      topLeft: (textDirection == TextDirection.ltr) ? activeRadius : radius,
+      bottomLeft: (textDirection == TextDirection.ltr) ? activeRadius : radius,
     );
     final RRect rightTrackRRect = RRect.fromLTRBAndCorners(
       thumbCenter.dx,
@@ -460,17 +472,12 @@ class GradientSliderTrackShape extends SliderTrackShape
       (textDirection == TextDirection.rtl)
           ? trackRect.bottom + (additionalActiveTrackHeight / 2)
           : trackRect.bottom,
-      topRight: (textDirection == TextDirection.rtl)
-          ? activeTrackRadius
-          : trackRadius,
-      bottomRight: (textDirection == TextDirection.rtl)
-          ? activeTrackRadius
-          : trackRadius,
+      topRight: (textDirection == TextDirection.rtl) ? activeRadius : radius,
+      bottomRight: (textDirection == TextDirection.rtl) ? activeRadius : radius,
     );
 
     paintSegment(canvas, leftTrackRRect, leftTrackPaint, leftBasePaint);
     paintSegment(canvas, rightTrackRRect, rightTrackPaint, rightBasePaint);
-    paintTrackBorder(
-        canvas, trackRect, trackRadius, trackBorder, trackBorderColor);
+    paintTrackBorder(canvas, trackRect, radius, trackBorder, trackBorderColor);
   }
 }

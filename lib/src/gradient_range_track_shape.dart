@@ -22,6 +22,7 @@ class GradientRangeSliderTrackShape extends RangeSliderTrackShape
     this.trackBorder,
     this.trackBorderColor,
     this.gradientSpansTrack = true,
+    this.trackRadius,
   });
 
   /// Gradient painted across the span between the two thumbs.
@@ -45,6 +46,10 @@ class GradientRangeSliderTrackShape extends RangeSliderTrackShape
   /// When false it is compressed into the span between the thumbs, so the full
   /// ramp is visible however narrow that span is.
   final bool gradientSpansTrack;
+
+  /// Corner radius of the track. Null keeps the fully-rounded default;
+  /// 0 gives square corners.
+  final double? trackRadius;
 
   @override
   bool get isRounded => true;
@@ -106,7 +111,7 @@ class GradientRangeSliderTrackShape extends RangeSliderTrackShape
               rightThumbOffset.dx, trackRect.bottom),
     );
 
-    final Radius trackRadius = Radius.circular(trackRect.height / 2);
+    final Radius radius = resolveTrackRadius(trackRadius, trackRect.height);
     final Canvas canvas = context.canvas;
 
     // Outer left segment: rounded on its outer edge only.
@@ -115,8 +120,8 @@ class GradientRangeSliderTrackShape extends RangeSliderTrackShape
       trackRect.top,
       leftThumbOffset.dx,
       trackRect.bottom,
-      topLeft: trackRadius,
-      bottomLeft: trackRadius,
+      topLeft: radius,
+      bottomLeft: radius,
     );
 
     // The active span between the thumbs: square on both ends.
@@ -133,15 +138,14 @@ class GradientRangeSliderTrackShape extends RangeSliderTrackShape
       trackRect.top,
       trackRect.right,
       trackRect.bottom,
-      topRight: trackRadius,
-      bottomRight: trackRadius,
+      topRight: radius,
+      bottomRight: radius,
     );
 
     paintSegment(canvas, leftRRect, paints.inactive, paints.inactiveBase);
     paintSegment(canvas, rightRRect, paints.inactive, paints.inactiveBase);
     paintSegment(canvas, middleRRect, paints.active, paints.activeBase);
 
-    paintTrackBorder(
-        canvas, trackRect, trackRadius, trackBorder, trackBorderColor);
+    paintTrackBorder(canvas, trackRect, radius, trackBorder, trackBorderColor);
   }
 }

@@ -26,6 +26,14 @@ class TrackPaints {
   final Paint? inactiveBase;
 }
 
+/// Resolves the corner radius for a track of [height].
+///
+/// A null [radius] keeps the fully-rounded default. Anything larger than half
+/// the height would over-round the corners, so it is clamped; 0 gives square
+/// corners.
+Radius resolveTrackRadius(double? radius, double height) => Radius.circular(
+    radius == null ? height / 2 : radius.clamp(0.0, height / 2));
+
 /// Dims a shader-backed paint towards transparent.
 ///
 /// A [Paint]'s `color` is ignored once a `shader` is set, so a gradient can

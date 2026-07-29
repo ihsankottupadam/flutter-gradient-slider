@@ -5,6 +5,8 @@
   only come from a local asset path
 * Exported `ImageThumbShape`, which was missing while its range counterpart was
   exported
+* Added `trackRadius` for square or custom-radius tracks. The track was always
+  fully rounded; null keeps that default and over-large values are clamped
 * Added `gradientSpansTrack`. The gradient stays anchored to the whole track by
   default; set it to false to compress the full ramp into the active portion —
   the span between the thumbs, for a range slider

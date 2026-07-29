@@ -102,6 +102,20 @@ This matters most for a `RangeSlider`, where the span between the thumbs can be
 narrow: anchored, it shows only a sliver of the gradient; compressed, the full
 ramp fits between the thumbs wherever they sit.
 
+### Track shape
+
+The track is fully rounded by default. `trackRadius` overrides that — `0` gives
+square corners, and anything larger than half the track height is clamped:
+
+```dart
+GradientSlider(
+  trackHeight: 20,
+  trackRadius: 4,
+  activeTrackGradient: const LinearGradient(colors: [Colors.pink, Colors.blue]),
+  slider: Slider(value: 0.5, onChanged: (value) {}),
+)
+```
+
 ### Styling the default thumb
 
 Set the thumb color on the `Slider` you pass to `slider:`:
@@ -185,3 +199,4 @@ SliderTheme(
 | double | trackBorder
 | Color | trackBorderColor
 | bool | gradientSpansTrack
+| double? | trackRadius
