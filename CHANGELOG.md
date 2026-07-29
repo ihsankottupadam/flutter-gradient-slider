@@ -5,6 +5,9 @@
   only come from a local asset path
 * Exported `ImageThumbShape`, which was missing while its range counterpart was
   exported
+* Added `gradientSpansTrack`. The gradient stays anchored to the whole track by
+  default; set it to false to compress the full ramp into the active portion —
+  the span between the thumbs, for a range slider
 
 ## 1.2.0
 

@@ -109,6 +109,15 @@ class GradientSlider extends StatefulWidget {
   /// Colour of the track border. Defaults to [Colors.black].
   final Color? trackBorderColor;
 
+  /// Whether [activeTrackGradient] spans the whole track (the default) or is
+  /// compressed into the active portion.
+  ///
+  /// Anchored to the track, the filled portion shows only the slice of the
+  /// gradient it covers, so a thumb near the start reveals just the first
+  /// colours. Set this to false to fit the entire ramp into the active
+  /// portion instead — the span between the thumbs, for a [RangeSlider].
+  final bool gradientSpansTrack;
+
   const GradientSlider(
       {super.key,
       this.thumbAsset,
@@ -125,7 +134,8 @@ class GradientSlider extends StatefulWidget {
       this.inactiveTrackColor,
       this.inactiveTrackGradient,
       this.trackBorder,
-      this.trackBorderColor});
+      this.trackBorderColor,
+      this.gradientSpansTrack = true});
 
   @override
   State<GradientSlider> createState() => _GradientSliderState();
@@ -285,6 +295,7 @@ class _GradientSliderState extends State<GradientSlider> {
           inactiveTrackGradient: widget.inactiveTrackGradient,
           trackBorder: widget.trackBorder,
           trackBorderColor: widget.trackBorderColor,
+          gradientSpansTrack: widget.gradientSpansTrack,
         ),
         // RangeSlider reads its own pair of fields; a plain Slider ignores
         // these, so setting both keeps one widget working for either child.
@@ -295,6 +306,7 @@ class _GradientSliderState extends State<GradientSlider> {
           inactiveTrackGradient: widget.inactiveTrackGradient,
           trackBorder: widget.trackBorder,
           trackBorderColor: widget.trackBorderColor,
+          gradientSpansTrack: widget.gradientSpansTrack,
         ),
       ),
       child: widget.slider,
@@ -321,6 +333,7 @@ class GradientSliderTrackShape extends SliderTrackShape
     this.inactiveTrackGradient,
     this.trackBorder,
     this.trackBorderColor,
+    this.gradientSpansTrack = true,
   });
 
   /// Gradient painted across the portion of the track before the thumb.
@@ -340,6 +353,13 @@ class GradientSliderTrackShape extends SliderTrackShape
   /// Colour of the track border. Defaults to [Colors.black] when only
   /// [trackBorder] is given.
   final Color? trackBorderColor;
+
+  /// Whether [activeTrackGradient] spans the whole track.
+  ///
+  /// When false it is compressed into the active portion, so the full ramp is
+  /// visible no matter where the thumb sits.
+  final bool gradientSpansTrack;
+
   @override
   void paint(
     PaintingContext context,
@@ -377,6 +397,14 @@ class GradientSliderTrackShape extends SliderTrackShape
       sliderTheme: sliderTheme,
       trackRect: trackRect,
       enabledT: enabledT,
+      // The active side is left of the thumb in LTR, right of it in RTL.
+      activeGradientRect: gradientSpansTrack
+          ? null
+          : (textDirection == TextDirection.ltr
+              ? Rect.fromLTRB(trackRect.left, trackRect.top, thumbCenter.dx,
+                  trackRect.bottom)
+              : Rect.fromLTRB(thumbCenter.dx, trackRect.top, trackRect.right,
+                  trackRect.bottom)),
     );
     final Paint activePaint = paints.active;
     final Paint inactivePaint = paints.inactive;

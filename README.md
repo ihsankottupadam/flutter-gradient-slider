@@ -83,6 +83,25 @@ GradientSlider(
 > hiding both collapses that padding to zero. If you stack a no-thumb slider next to
 > normal ones and need them to line up, wrap it in `Padding` to compensate.
 
+### Gradient mapping
+
+By default the gradient is anchored to the **whole track**, so the filled
+portion shows only the slice it covers — a thumb near the start reveals just
+the first colours. Set `gradientSpansTrack: false` to fit the entire ramp into
+the active portion instead:
+
+```dart
+GradientSlider(
+  gradientSpansTrack: false,
+  activeTrackGradient: const LinearGradient(colors: [Colors.pink, Colors.blue]),
+  slider: Slider(value: 0.3, onChanged: (value) {}),
+)
+```
+
+This matters most for a `RangeSlider`, where the span between the thumbs can be
+narrow: anchored, it shows only a sliver of the gradient; compressed, the full
+ramp fits between the thumbs wherever they sit.
+
 ### Styling the default thumb
 
 Set the thumb color on the `Slider` you pass to `slider:`:
@@ -165,3 +184,4 @@ SliderTheme(
 | double | trackHeight
 | double | trackBorder
 | Color | trackBorderColor
+| bool | gradientSpansTrack

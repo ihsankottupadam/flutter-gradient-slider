@@ -48,9 +48,18 @@ TrackPaints buildTrackPaints({
   required SliderThemeData sliderTheme,
   required Rect trackRect,
   required double enabledT,
+  Rect? activeGradientRect,
 }) {
+  // Mapping the gradient to the active region compresses the whole ramp into
+  // it; falling back to the track rect keeps it anchored across the full
+  // track. A degenerate region would make the shader ill-defined.
+  final Rect activeRect =
+      (activeGradientRect == null || activeGradientRect.width <= 0)
+          ? trackRect
+          : activeGradientRect;
+
   final Paint active = Paint()
-    ..shader = activeTrackGradient.createShader(trackRect)
+    ..shader = activeTrackGradient.createShader(activeRect)
     ..colorFilter = fadeFilter(enabledT);
 
   final Paint inactive = Paint();

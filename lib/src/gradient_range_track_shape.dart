@@ -21,6 +21,7 @@ class GradientRangeSliderTrackShape extends RangeSliderTrackShape
     this.inactiveTrackGradient,
     this.trackBorder,
     this.trackBorderColor,
+    this.gradientSpansTrack = true,
   });
 
   /// Gradient painted across the span between the two thumbs.
@@ -38,6 +39,12 @@ class GradientRangeSliderTrackShape extends RangeSliderTrackShape
   /// Colour of the track border. Defaults to [Colors.black] when only
   /// [trackBorder] is given.
   final Color? trackBorderColor;
+
+  /// Whether [activeTrackGradient] spans the whole track.
+  ///
+  /// When false it is compressed into the span between the thumbs, so the full
+  /// ramp is visible however narrow that span is.
+  final bool gradientSpansTrack;
 
   @override
   bool get isRounded => true;
@@ -70,16 +77,6 @@ class GradientRangeSliderTrackShape extends RangeSliderTrackShape
       isDiscrete: isDiscrete,
     );
 
-    // 0 = fully disabled, 1 = fully enabled.
-    final double enabledT = enableAnimation.value.clamp(0.0, 1.0);
-    final TrackPaints paints = buildTrackPaints(
-      activeTrackGradient: activeTrackGradient,
-      inactiveTrackGradient: inactiveTrackGradient,
-      sliderTheme: sliderTheme,
-      trackRect: trackRect,
-      enabledT: enabledT,
-    );
-
     // In RTL the start thumb sits on the right, so resolve which thumb is
     // which on screen before slicing the track up.
     final Offset leftThumbOffset;
@@ -94,6 +91,20 @@ class GradientRangeSliderTrackShape extends RangeSliderTrackShape
         rightThumbOffset = startThumbCenter;
         break;
     }
+
+    // 0 = fully disabled, 1 = fully enabled.
+    final double enabledT = enableAnimation.value.clamp(0.0, 1.0);
+    final TrackPaints paints = buildTrackPaints(
+      activeTrackGradient: activeTrackGradient,
+      inactiveTrackGradient: inactiveTrackGradient,
+      sliderTheme: sliderTheme,
+      trackRect: trackRect,
+      enabledT: enabledT,
+      activeGradientRect: gradientSpansTrack
+          ? null
+          : Rect.fromLTRB(leftThumbOffset.dx, trackRect.top,
+              rightThumbOffset.dx, trackRect.bottom),
+    );
 
     final Radius trackRadius = Radius.circular(trackRect.height / 2);
     final Canvas canvas = context.canvas;
