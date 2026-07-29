@@ -1,7 +1,7 @@
 
  A slider widget, supports image thumb, track gradient and border
 
-![Image thumb, default Material thumb, range slider and no thumb](https://raw.githubusercontent.com/ihsankottupadam/flutter-gradient-slider/master/screenshots/thumb_modes.png)
+![Image thumb, default Material thumb, range slider and no thumb](https://raw.githubusercontent.com/ihsankottupadam/flutter-gradient-slider/master/screenshots/slider_modes.png)
 
 ## Features
 

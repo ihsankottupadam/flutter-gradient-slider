@@ -12,7 +12,7 @@ topics:
 
 screenshots:
   - description: 'Image thumb, default Material thumb, range slider and no thumb'
-    path: screenshots/thumb_modes.png
+    path: screenshots/slider_modes.png
 
 
 environment:
