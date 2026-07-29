@@ -280,10 +280,12 @@ class GradientSliderTrackShape extends SliderTrackShape
       (textDirection == TextDirection.ltr)
           ? trackRect.bottom + (additionalActiveTrackHeight / 2)
           : trackRect.bottom,
-      topLeft:
-          (textDirection == TextDirection.ltr) ? activeTrackRadius : trackRadius,
-      bottomLeft:
-          (textDirection == TextDirection.ltr) ? activeTrackRadius : trackRadius,
+      topLeft: (textDirection == TextDirection.ltr)
+          ? activeTrackRadius
+          : trackRadius,
+      bottomLeft: (textDirection == TextDirection.ltr)
+          ? activeTrackRadius
+          : trackRadius,
     );
     final RRect rightTrackRRect = RRect.fromLTRBAndCorners(
       thumbCenter.dx,
@@ -294,10 +296,12 @@ class GradientSliderTrackShape extends SliderTrackShape
       (textDirection == TextDirection.rtl)
           ? trackRect.bottom + (additionalActiveTrackHeight / 2)
           : trackRect.bottom,
-      topRight:
-          (textDirection == TextDirection.rtl) ? activeTrackRadius : trackRadius,
-      bottomRight:
-          (textDirection == TextDirection.rtl) ? activeTrackRadius : trackRadius,
+      topRight: (textDirection == TextDirection.rtl)
+          ? activeTrackRadius
+          : trackRadius,
+      bottomRight: (textDirection == TextDirection.rtl)
+          ? activeTrackRadius
+          : trackRadius,
     );
 
     if (leftBasePaint != null) {
