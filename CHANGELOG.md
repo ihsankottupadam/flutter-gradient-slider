@@ -1,3 +1,17 @@
+## 1.2.0
+
+* `RangeSlider` is now supported — pass one as `slider:` and the gradient fills
+  the span between the two thumbs. Previously it rendered as a plain range
+  slider with no gradient and no error
+* Added `rangeThumbShape`, the `RangeSlider` counterpart of `thumbShape`
+* `thumbAsset` now applies to range sliders too. `showThumb` remains
+  single-slider only — a range slider always keeps its thumbs
+* Exported `GradientRangeSliderTrackShape` and `ImageRangeThumbShape`
+* Added the missing return type on an internal method, which cost 10 pub points
+  under pub.dev's static analysis
+* Upgraded the `lints` dev dependency to 6.x so pub.dev's stricter lints are
+  caught locally
+
 ## 1.1.0
 
 * `thumbAsset` is now optional — omit it to use the default Material thumb

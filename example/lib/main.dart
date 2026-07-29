@@ -30,6 +30,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   double sliderValue = 5;
+  RangeValues rangeValues = const RangeValues(2, 7);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,6 +67,30 @@ class _HomeScreenState extends State<HomeScreen> {
               inactiveTrackGradient: _inactiveGradient,
               // Slider.thumbColor takes precedence over any theme value.
               slider: _buildSlider(thumbColor: Colors.white),
+            ),
+            const SizedBox(height: 32),
+            const Text('Range slider'),
+            GradientSlider(
+              // The image is drawn for both thumbs.
+              thumbAsset: 'assets/vert_thumb.png',
+              thumbHeight: 30,
+              thumbWidth: 30,
+              trackHeight: 10,
+              trackBorder: 1,
+              trackBorderColor: Colors.black,
+              activeTrackGradient: _activeGradient,
+              inactiveTrackGradient: _inactiveGradient,
+              // The same widget: the gradient fills the span between thumbs.
+              slider: RangeSlider(
+                values: rangeValues,
+                min: 0,
+                max: 10,
+                onChanged: (val) {
+                  setState(() {
+                    rangeValues = val;
+                  });
+                },
+              ),
             ),
             const SizedBox(height: 32),
             const Text('No thumb'),

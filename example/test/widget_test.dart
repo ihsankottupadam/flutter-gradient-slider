@@ -8,9 +8,10 @@ void main() {
     await tester.pumpWidget(const MyApp());
     await tester.pumpAndSettle();
 
-    expect(find.byType(GradientSlider), findsNWidgets(3));
+    expect(find.byType(GradientSlider), findsNWidgets(4));
     expect(find.text('Image thumb'), findsOneWidget);
     expect(find.text('Default Material thumb'), findsOneWidget);
+    expect(find.text('Range slider'), findsOneWidget);
     expect(find.text('No thumb'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

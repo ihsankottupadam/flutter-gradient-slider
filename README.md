@@ -1,12 +1,13 @@
 
  A slider widget, supports image thumb, track gradient and border
 
-![Image thumb, default Material thumb and no thumb](https://raw.githubusercontent.com/ihsankottupadam/flutter-gradient-slider/master/screenshots/thumb_modes.png)
+![Image thumb, default Material thumb, range slider and no thumb](https://raw.githubusercontent.com/ihsankottupadam/flutter-gradient-slider/master/screenshots/thumb_modes.png)
 
 ## Features
 
 * Custom thumb image
 * Default Material thumb, or no thumb at all
+* Works with both `Slider` and `RangeSlider`
 * Active track gradient
 * Inactive track gradient
 * Track border
@@ -84,6 +85,38 @@ GradientSlider(
 )
 ```
 
+## Range slider
+
+Pass a `RangeSlider` as `slider:` — same widget, no extra setup. The gradient
+fills the span **between** the two thumbs:
+
+```dart
+GradientSlider(
+  trackHeight: 10,
+  activeTrackGradient: const LinearGradient(colors: [Colors.pink, Colors.blue]),
+  inactiveTrackGradient:
+      LinearGradient(colors: [Colors.grey.shade300, Colors.grey.shade800]),
+  slider: RangeSlider(
+    values: rangeValues,
+    min: 0,
+    max: 10,
+    onChanged: (v) => setState(() => rangeValues = v),
+  ),
+)
+```
+
+`thumbAsset`, `trackBorder` and the disabled fade all work exactly as they do
+for a single-thumb slider. Use `rangeThumbShape` for a fully custom thumb, the
+counterpart of `thumbShape`.
+
+Two differences worth knowing:
+
+* `showThumb: false` applies to `Slider` only. A range slider always keeps its
+  thumbs, since without them there is no cue as to which end you are dragging.
+* The active span cannot be drawn taller than the rest of the track —
+  `RangeSliderTrackShape.paint` has no `additionalActiveTrackHeight` parameter,
+  unlike the single-thumb equivalent.
+
 ### Theming
 
 `GradientSlider` merges onto the inherited `SliderTheme` rather than replacing it, so anything
@@ -110,6 +143,7 @@ SliderTheme(
 | double | thumbWidth
 | bool | showThumb
 | SliderComponentShape | thumbShape
+| RangeSliderThumbShape | rangeThumbShape
 | SliderComponentShape | overlayShape
 | Widget | slider
 | Gradient | activeTrackGradient

@@ -3,10 +3,18 @@ library gradient_slider;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:gradient_slider/src/gradient_range_track_shape.dart';
+import 'package:gradient_slider/src/image_range_thumb_shape.dart';
 import 'package:gradient_slider/src/image_thumb_shape.dart';
+import 'package:gradient_slider/src/track_painting.dart';
 
-/// Wraps a [Slider] so its track is painted with a gradient, with an optional
-/// image thumb.
+export 'package:gradient_slider/src/gradient_range_track_shape.dart';
+export 'package:gradient_slider/src/image_range_thumb_shape.dart';
+
+/// Wraps a [Slider] or [RangeSlider] so its track is painted with a gradient,
+/// with an optional image thumb.
+///
+/// For a [RangeSlider] the gradient fills the span between the two thumbs.
 ///
 /// The thumb has three modes:
 ///
@@ -32,21 +40,30 @@ class GradientSlider extends StatefulWidget {
   /// Leave this null to fall back to the default Material thumb.
   final String? thumbAsset;
 
-  /// The [Slider] to apply the gradient track and thumb to.
-  ///
-  /// [RangeSlider] is not supported; it requires a [RangeSliderTrackShape].
+  /// The [Slider] or [RangeSlider] to apply the gradient track and thumb to.
   final Widget slider;
 
   /// Set to false to hide the thumb (and its overlay) entirely, leaving a
   /// bare gradient track that can still be dragged.
+  ///
+  /// Applies to [Slider] only. A [RangeSlider] always keeps its thumbs, since
+  /// without them there is no cue as to which end is being dragged.
   final bool showThumb;
 
   /// A fully custom thumb shape. Takes precedence over [thumbAsset], and is
   /// ignored when [showThumb] is false.
   final SliderComponentShape? thumbShape;
 
+  /// A fully custom thumb shape for a [RangeSlider].
+  ///
+  /// The range counterpart of [thumbShape]; takes precedence over
+  /// [thumbAsset] and is ignored when [showThumb] is false.
+  final RangeSliderThumbShape? rangeThumbShape;
+
   /// A custom overlay shape. When null, the overlay is hidden if [showThumb]
   /// is false, and left to the Material default otherwise.
+  ///
+  /// [Slider] and [RangeSlider] share this field, so it applies to both.
   final SliderComponentShape? overlayShape;
 
   /// Only used when [thumbAsset] is provided.
@@ -82,6 +99,7 @@ class GradientSlider extends StatefulWidget {
       required this.slider,
       this.showThumb = true,
       this.thumbShape,
+      this.rangeThumbShape,
       this.overlayShape,
       this.activeTrackGradient,
       this.thumbWidth = 50,
@@ -98,6 +116,7 @@ class GradientSlider extends StatefulWidget {
 
 class _GradientSliderState extends State<GradientSlider> {
   ImageThumbShape? myShape;
+  ImageRangeThumbShape? myRangeShape;
   ui.Image? thumbImage;
 
   @override
@@ -123,7 +142,7 @@ class _GradientSliderState extends State<GradientSlider> {
     }
   }
 
-  _loadImage() async {
+  Future<void> _loadImage() async {
     final asset = widget.thumbAsset;
     if (asset == null) {
       _clearThumb();
@@ -147,12 +166,16 @@ class _GradientSliderState extends State<GradientSlider> {
 
   void _clearThumb() {
     thumbImage = null;
-    if (myShape == null) return;
+    if (myShape == null && myRangeShape == null) return;
     if (!mounted) {
       myShape = null;
+      myRangeShape = null;
       return;
     }
-    setState(() => myShape = null);
+    setState(() {
+      myShape = null;
+      myRangeShape = null;
+    });
   }
 
   void _updateThumbShape() {
@@ -167,6 +190,11 @@ class _GradientSliderState extends State<GradientSlider> {
         width: widget.thumbWidth.toDouble(),
         height: widget.thumbHeight.toDouble(),
       );
+      myRangeShape = ImageRangeThumbShape(
+        image: thumbImage!,
+        width: widget.thumbWidth.toDouble(),
+        height: widget.thumbHeight.toDouble(),
+      );
     });
   }
 
@@ -175,6 +203,13 @@ class _GradientSliderState extends State<GradientSlider> {
     if (!widget.showThumb) return SliderComponentShape.noThumb;
     return widget.thumbShape ?? myShape;
   }
+
+  /// Null means "let RangeSlider fall back to the Material default thumb".
+  ///
+  /// [GradientSlider.showThumb] is deliberately not honoured here: a range
+  /// slider with no thumbs gives no clue which end is being dragged.
+  RangeSliderThumbShape? get _resolvedRangeThumbShape =>
+      widget.rangeThumbShape ?? myRangeShape;
 
   /// Null means "let Slider fall back to the Material default overlay".
   SliderComponentShape? get _resolvedOverlayShape {
@@ -195,6 +230,16 @@ class _GradientSliderState extends State<GradientSlider> {
         trackHeight: widget.trackHeight,
         inactiveTrackColor: widget.inactiveTrackColor,
         trackShape: GradientSliderTrackShape(
+          activeTrackGradient:
+              widget.activeTrackGradient ?? _defaultActiveGradient,
+          inactiveTrackGradient: widget.inactiveTrackGradient,
+          trackBorder: widget.trackBorder,
+          trackBorderColor: widget.trackBorderColor,
+        ),
+        // RangeSlider reads its own pair of fields; a plain Slider ignores
+        // these, so setting both keeps one widget working for either child.
+        rangeThumbShape: _resolvedRangeThumbShape,
+        rangeTrackShape: GradientRangeSliderTrackShape(
           activeTrackGradient:
               widget.activeTrackGradient ?? _defaultActiveGradient,
           inactiveTrackGradient: widget.inactiveTrackGradient,
@@ -276,39 +321,17 @@ class GradientSliderTrackShape extends SliderTrackShape
     );
     // 0 = fully disabled, 1 = fully enabled.
     final double enabledT = enableAnimation.value.clamp(0.0, 1.0);
-
-    // A Paint's `color` is ignored once a `shader` is set, so a gradient can
-    // only be dimmed through a colorFilter. Modulating by white at alpha t
-    // scales the gradient's alpha to t while leaving its hues untouched.
-    ColorFilter? fade() => enabledT >= 1.0
-        ? null
-        : ColorFilter.mode(
-            Color.fromRGBO(255, 255, 255, enabledT), BlendMode.modulate);
-
-    final Paint activePaint = Paint()
-      ..shader = activeTrackGradient.createShader(trackRect)
-      ..colorFilter = fade();
-
-    final Paint inactivePaint = Paint();
-    if (inactiveTrackGradient != null) {
-      inactivePaint
-        ..shader = inactiveTrackGradient!.createShader(trackRect)
-        ..colorFilter = fade();
-    } else {
-      // No shader here, so a plain colour lerp is enough.
-      inactivePaint.color = Color.lerp(sliderTheme.disabledInactiveTrackColor,
-          sliderTheme.inactiveTrackColor, enabledT)!;
-    }
-
-    // Painted beneath the faded gradients so the disabled colour shows
-    // through instead of whatever happens to be behind the slider.
-    final Paint? activeBasePaint = enabledT >= 1.0
-        ? null
-        : (Paint()..color = sliderTheme.disabledActiveTrackColor!);
-    final Paint? inactiveBasePaint =
-        (enabledT >= 1.0 || inactiveTrackGradient == null)
-            ? null
-            : (Paint()..color = sliderTheme.disabledInactiveTrackColor!);
+    final TrackPaints paints = buildTrackPaints(
+      activeTrackGradient: activeTrackGradient,
+      inactiveTrackGradient: inactiveTrackGradient,
+      sliderTheme: sliderTheme,
+      trackRect: trackRect,
+      enabledT: enabledT,
+    );
+    final Paint activePaint = paints.active;
+    final Paint inactivePaint = paints.inactive;
+    final Paint? activeBasePaint = paints.activeBase;
+    final Paint? inactiveBasePaint = paints.inactiveBase;
 
     final canvas = context.canvas;
     final Paint leftTrackPaint;
@@ -367,33 +390,9 @@ class GradientSliderTrackShape extends SliderTrackShape
           : trackRadius,
     );
 
-    if (leftBasePaint != null) {
-      canvas.drawRRect(leftTrackRRect, leftBasePaint);
-    }
-    canvas.drawRRect(leftTrackRRect, leftTrackPaint);
-
-    if (rightBasePaint != null) {
-      canvas.drawRRect(rightTrackRRect, rightBasePaint);
-    }
-    canvas.drawRRect(rightTrackRRect, rightTrackPaint);
-    if (trackBorder != null || trackBorderColor != null) {
-      final strokePaint = Paint()
-        ..color = trackBorderColor ?? Colors.black
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = trackBorder != null
-            ? trackBorder! < trackRect.height / 2
-                ? trackBorder!
-                : trackRect.height / 2
-            : 1
-        ..strokeCap = StrokeCap.round;
-      canvas.drawRRect(
-          RRect.fromLTRBAndCorners(
-              trackRect.left, trackRect.top, trackRect.right, trackRect.bottom,
-              topLeft: trackRadius,
-              bottomLeft: trackRadius,
-              bottomRight: trackRadius,
-              topRight: trackRadius),
-          strokePaint);
-    }
+    paintSegment(canvas, leftTrackRRect, leftTrackPaint, leftBasePaint);
+    paintSegment(canvas, rightTrackRRect, rightTrackPaint, rightBasePaint);
+    paintTrackBorder(
+        canvas, trackRect, trackRadius, trackBorder, trackBorderColor);
   }
 }
