@@ -64,8 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
               trackBorderColor: Colors.black,
               activeTrackGradient: _activeGradient,
               inactiveTrackGradient: _inactiveGradient,
-              // Thumb styling belongs on the Slider itself, not on an outer
-              // SliderTheme (which GradientSlider's own theme would shadow).
+              // Slider.thumbColor takes precedence over any theme value.
               slider: _buildSlider(thumbColor: Colors.white),
             ),
             const SizedBox(height: 32),
