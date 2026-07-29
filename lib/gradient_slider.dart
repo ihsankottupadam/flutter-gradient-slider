@@ -5,11 +5,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gradient_slider/src/image_thumb_shape.dart';
 
+/// Wraps a [Slider] so its track is painted with a gradient, with an optional
+/// image thumb.
+///
+/// The thumb has three modes:
+///
+/// * pass [thumbAsset] for an image thumb,
+/// * pass nothing for the default Material thumb,
+/// * pass `showThumb: false` for no thumb at all.
+///
+/// ```dart
+/// GradientSlider(
+///   thumbAsset: 'assets/thumb.png',
+///   activeTrackGradient: const LinearGradient(
+///     colors: [Colors.pink, Colors.blue],
+///   ),
+///   slider: Slider(value: value, onChanged: (v) => setState(() => value = v)),
+/// )
+/// ```
+///
+/// Settings from an inherited [SliderTheme] are preserved, so anything this
+/// widget does not set itself can still be themed from above it.
 class GradientSlider extends StatefulWidget {
   /// Asset path of the image used as the thumb.
   ///
   /// Leave this null to fall back to the default Material thumb.
   final String? thumbAsset;
+
+  /// The [Slider] to apply the gradient track and thumb to.
+  ///
+  /// [RangeSlider] is not supported; it requires a [RangeSliderTrackShape].
   final Widget slider;
 
   /// Set to false to hide the thumb (and its overlay) entirely, leaving a
@@ -29,11 +54,26 @@ class GradientSlider extends StatefulWidget {
 
   /// Only used when [thumbAsset] is provided.
   final double thumbHeight;
+
+  /// Height of the track. Falls back to the inherited theme when null.
   final double? trackHeight;
+
+  /// Gradient painted before the thumb. Defaults to red-to-blue.
   final Gradient? activeTrackGradient;
+
+  /// Gradient painted after the thumb.
+  ///
+  /// Takes precedence over [inactiveTrackColor].
   final Gradient? inactiveTrackGradient;
+
+  /// Flat colour for the track after the thumb, used when
+  /// [inactiveTrackGradient] is null.
   final Color? inactiveTrackColor;
+
+  /// Stroke width of the track border. Clamped to half the track height.
   final double? trackBorder;
+
+  /// Colour of the track border. Defaults to [Colors.black].
   final Color? trackBorderColor;
 
   const GradientSlider(
@@ -156,7 +196,7 @@ class _GradientSliderState extends State<GradientSlider> {
         inactiveTrackColor: widget.inactiveTrackColor,
         trackShape: GradientSliderTrackShape(
           activeTrackGradient:
-              widget.activeTrackGradient ?? _defaultAciveGradient,
+              widget.activeTrackGradient ?? _defaultActiveGradient,
           inactiveTrackGradient: widget.inactiveTrackGradient,
           trackBorder: widget.trackBorder,
           trackBorderColor: widget.trackBorderColor,
@@ -166,21 +206,44 @@ class _GradientSliderState extends State<GradientSlider> {
     );
   }
 
-  final _defaultAciveGradient =
-      const LinearGradient(colors: [Colors.red, Colors.blue]);
+  static const _defaultActiveGradient =
+      LinearGradient(colors: [Colors.red, Colors.blue]);
 }
 
+/// A rounded slider track painted with a [Gradient] instead of a flat colour,
+/// with an optional border.
+///
+/// [GradientSlider] installs this for you; use it directly only when you want
+/// the gradient track inside a [SliderTheme] of your own.
+///
+/// Both tracks fade towards the theme's disabled colours as the slider is
+/// disabled.
 class GradientSliderTrackShape extends SliderTrackShape
     with BaseSliderTrackShape {
+  /// Creates a gradient track shape.
   GradientSliderTrackShape({
     required this.activeTrackGradient,
     this.inactiveTrackGradient,
     this.trackBorder,
     this.trackBorderColor,
   });
+
+  /// Gradient painted across the portion of the track before the thumb.
   final Gradient activeTrackGradient;
+
+  /// Gradient painted after the thumb.
+  ///
+  /// When null the track falls back to [SliderThemeData.inactiveTrackColor].
   final Gradient? inactiveTrackGradient;
+
+  /// Stroke width of the border drawn around the track.
+  ///
+  /// Clamped to half the track height. Null draws no border unless
+  /// [trackBorderColor] is set, in which case it defaults to 1.
   final double? trackBorder;
+
+  /// Colour of the track border. Defaults to [Colors.black] when only
+  /// [trackBorder] is given.
   final Color? trackBorderColor;
   @override
   void paint(

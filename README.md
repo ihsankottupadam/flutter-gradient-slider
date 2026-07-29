@@ -65,6 +65,11 @@ GradientSlider(
 
 `thumbHeight` and `thumbWidth` only apply to the image thumb.
 
+> **Note:** a `showThumb: false` slider is slightly **wider** than one with a thumb.
+> Flutter derives the track's horizontal padding from the thumb and overlay size, so
+> hiding both collapses that padding to zero. If you stack a no-thumb slider next to
+> normal ones and need them to line up, wrap it in `Padding` to compensate.
+
 ### Styling the default thumb
 
 Set the thumb color on the `Slider` you pass to `slider:`:
